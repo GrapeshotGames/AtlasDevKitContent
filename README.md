@@ -1,5 +1,5 @@
 # Atlas Dev Kit Content
-Source Art and Art Tools for the ATLAS Dev Kit.
+Source Art and Art Tools for the [ATLAS Dev Kit](https://devkit.playatlas.com).
 
 ## DCC Software Versions
 
