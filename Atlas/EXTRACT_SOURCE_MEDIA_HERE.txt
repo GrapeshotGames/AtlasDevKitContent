@@ -1,0 +1,3 @@
+Download the ATLAS Dev Kit Model and Animation source files here: http://sail.gg/devkitcontent
+
+Extract them into this folder. 
