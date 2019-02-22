@@ -1,0 +1,774 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pythonPanelDocument>
+  <!-- This file contains definitions of Python interfaces and the
+ interfaces menu.  It should not be hand-edited when it is being
+ used by the application.  Note, that two definitions of the
+ same interface or of the interfaces menu are not allowed
+ in a single file. -->
+  <interface name="atlas_character_builder" label="Atlas Character Builder" icon="$HOME/houdini16.5/config/Icons/atlas_icon.png" help_url="">
+    <script><![CDATA[########################################################################
+# Atlas Character Wizard
+########################################################################
+
+import sys
+import os
+import hou
+import toolutils
+from hutil.Qt import QtCore, QtUiTools, QtWidgets
+
+folder = "%s/Houdini16.5/python_panels/Atlas_Character_Builder.ui" % os.environ["HSITE"]
+icon = "%s/Houdini16.5/python_panels/icons/atlas_icon_64.png" % os.environ["HSITE"]
+
+
+###################################################
+#Utility functions to get all the nodes in the wizard
+def getObj():
+    obj = hou.node("/obj")
+    return obj
+
+
+def getWizardNode():
+    obj = getObj()
+    wizard = obj.node("Character_Wizard")
+
+    return wizard
+
+def getClothFBx():
+    obj = getObj()
+    clothFbx = obj.node("Cloth_FBX")
+
+    return clothFbx
+
+def getBodiesNode():
+    wizard = getWizardNode()
+    bodiesNode = wizard.node("Default_Bodies")
+
+    return bodiesNode
+    
+def getClothingManager():
+    wizard = getWizardNode()
+    clothManager = wizard.node("Manage_Clothing")
+
+    return clothManager
+
+def getAtlasClothing():
+    manager = getClothingManager()
+    atlasNode = manager.node("mb_atlas_clothing1")
+
+    return atlasNode
+
+def getPaintingNode():
+    wizard = getWizardNode()
+    paintingNode = wizard.node("Painting")
+
+    return paintingNode
+
+def getSkinningNode():
+    wizard = getWizardNode()
+    skinningNode = wizard.node("Skinning")
+
+    return skinningNode
+
+def getPainterHDA():
+    paintingNode = getPaintingNode()
+    painterNode = paintingNode.node("wc_shrinkmask_painter")
+
+    return painterNode
+
+def getClearNode():
+    wizard = getWizardNode()
+    clearNode = wizard.node("Clear_Null")
+
+    return clearNode
+
+def getExportNode():
+    wizard = getWizardNode()
+    exportNode = wizard.node("Export")
+
+    return exportNode
+
+
+def getSceneInfo():
+    clothNode = getClothFBx()
+
+    if clothNode != None:
+        filenode = clothNode.node("Fbx_File")
+        path = filenode.parm("file").eval()
+
+        lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "line_name")
+        if len(path) > 0:
+            lineEdit.setText(" " + path)
+            setClothFileName()
+        else:
+            lineEdit.setText("No Fbx Loaded")
+    else:
+        hou.ui.displayMessage("Shiver me Timbers! We be needin a Cloth Node! {GetSceneInfo Function - 97}", ["Ok"])
+
+
+
+def getExportNullNode(parent):
+    if parent != None:
+        children = parent.children()
+        nullNode = None
+
+        for child in children:
+            if child.type().name() == "null":
+                nullNode = child
+        
+        return nullNode
+    else:
+        hou.ui.displayMessage("Avast! We have no Export Node, Matey {GetSceneInfo Function - 112}", ["Ok"])
+
+
+
+def handleNodeViz(painting):
+    bodies = getBodiesNode()
+    manager = getClothingManager()
+    paint = getPaintingNode()
+    skin = getSkinningNode()
+    clearNode = getClearNode()
+
+    if painting == 1:
+        bodies.setDisplayFlag(False)
+        manager.setDisplayFlag(False)
+        skin.setDisplayFlag(False)
+        paint.setDisplayFlag(True)
+    elif painting == 0:
+        bodies.setDisplayFlag(True)
+        manager.setDisplayFlag(True)
+        skin.setDisplayFlag(True)
+        paint.setDisplayFlag(False)
+        clearNode.setCurrent(True, False)
+
+def getClothFilename():
+    clothnode = getClothFBx()
+
+    finalname = ""
+    if clothnode != None:
+        filenode = clothnode.node("Fbx_File")
+        filepath = filenode.parm("file").eval()
+        
+        #split it up by the forward slash
+        pathsplit = filepath.split("/")
+
+        #remove thefile extension
+        namesplit = pathsplit[len(pathsplit)-1].split(".")
+        finalname = namesplit[0]
+    
+    return finalname
+
+def setClothFileName():
+
+    finalname = getClothFilename()
+
+    fbxfilename = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_file_name")
+    fbxfilename.setText(finalname + ".fbx")
+    
+
+    maskfilename = mainWindow.findChild(QtWidgets.QLineEdit, "mask_file_name")
+    maskfilename.setText(finalname + "_M.tga")
+
+
+def checkFileNames():
+    print("Checking file names!")
+
+####################################################
+
+
+
+
+###################################################
+#Create the mian nodes we need for the system to work
+def createClothNode():
+    houVersion = hou.applicationVersion()
+    obj = getObj()
+    clothNode = getClothFBx()
+
+    if clothNode == None:
+        clothNode = obj.createNode("geo", "Cloth_FBX")
+
+        fileNode = None
+        if houVersion[0] == 16:
+            fileNode = obj.node("Cloth_FBX/file1")
+            fileNode.setName("Fbx_File")
+        elif houVersion[0] == 17:
+            fileNode = clothNode.createNode("file", "Fbx_File")
+        
+        fileNode.parm("file").set("")
+
+        attrDeleteNode = clothNode.createNode("attribdelete", "clean_attrs")
+        attrDeleteNode.setInput(0, fileNode, 0)
+        attrDeleteNode.setDisplayFlag(True)
+        fileNode.setDisplayFlag(False)
+        fileNode.setRenderFlag(False)
+
+        attrDeleteNode.parm("vtxdel").set("Cd Alpha")
+        attrDeleteNode.parm("ptdel").set("mypointid ShrinkDelta Cd Alpha")
+
+
+def createWizardNode():
+    obj = getObj()
+    wizard = getWizardNode()
+
+    if wizard == None:
+        wizard = obj.createNode("wc_character_wizard", "Character_Wizard")
+###################################################
+
+
+
+
+####################################################
+#Viewport Utility functions
+def frameAll():
+    viewer = toolutils.sceneViewer()
+    viewer.enterViewState()
+    
+    for view in viewer.viewports():
+        view.homeAll()
+
+def setNoLighting():
+    viewportLightingHelper(0)
+    
+def setNormalLighting():
+    viewportLightingHelper(1)
+
+def viewportLightingHelper(type):
+    viewer = toolutils.sceneViewer()
+    viewport = viewer.curViewport()
+    viewportsettings = viewport.settings()
+
+    if type == 0:
+        viewportsettings.setLighting(hou.viewportLighting.Off)
+    else:
+        viewportsettings.setLighting(hou.viewportLighting.Normal)
+
+def getResolution():
+    resbox = mainWindow.findChild(QtWidgets.QComboBox, "res_box")
+    currentID = resbox.currentIndex()
+    finalID = 0
+
+    if currentID == 0:
+        finalID = 512
+    elif currentID == 1:
+        finalID = 1024
+    elif currentID == 2:
+        finalID = 2048
+    elif currentID == 3:
+        finalID = 4096
+
+    return finalID
+
+def getLayer():
+    layerbox = mainWindow.findChild(QtWidgets.QComboBox, "layer_box")
+    currentID = layerbox.currentIndex()
+    finalID = 0
+
+    if currentID == 0:
+        finalID = 0
+    elif currentID == 1:
+        finalID = 0.01
+    elif currentID == 2:
+        finalID = 0.05
+    elif currentID == 3:
+        finalID = 0.1
+    elif currentID == 4:
+        finalID = 0.15
+    elif currentID == 5:
+        finalID = 0.2
+    elif currentID == 6:
+        finalID = 0.25
+    elif currentID == 7:
+        finalID = 0.3
+    elif currentID == 8:
+        finalID = 0.35
+    elif currentID == 9:
+        finalID = 0.4
+    
+    return finalID
+###################################################
+
+
+
+
+
+###################################################
+#Body Functions
+def toggleBody():
+    wizard = getWizardNode()
+
+    if wizard != None:
+        bodytoggle = wizard.parm("defaultBody")
+        togglebtn = mainWindow.findChild(QtWidgets.QPushButton, "body_toggle")
+
+        if bodytoggle.eval() == 0:
+            bodytoggle.set(1)
+            togglebtn.setText("Toggle Body - Female")
+        else:
+            bodytoggle.set(0)
+            togglebtn.setText("Toggle Body - Male")
+    else:
+        hou.ui.displayMessage("Shiver me Timbers! We be missin the Wizard Node! {ToggleBody Function - 298}", ["Ok"])
+
+
+def toggleBodyViz():
+    #print("Toggling Body Viz")
+    bodiesNode = getBodiesNode()
+    bodyvizbtn = mainWindow.findChild(QtWidgets.QPushButton, "body_viz_btn")
+
+    if bodiesNode != None:
+        isDisplayed = bodiesNode.isDisplayFlagSet()
+        if isDisplayed:
+            bodiesNode.setDisplayFlag(False)
+            bodyvizbtn.setText("Body Viz - Off")
+        else:
+            bodiesNode.setDisplayFlag(True)
+            bodyvizbtn.setText("Body Viz - On")
+    else:
+        hou.ui.displayMessage("Shiver me Timbers! We be missin the Bodies Node! {ToggleBodyViz Function - 316}", ["Ok"])
+##################################################
+
+
+
+
+
+##################################################
+#Painting Functions
+def loadMask():
+    #get path to user Mask file
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "load_mask_edit")
+    filePath = ""
+
+    lineEdit.setText(filePath)
+    filePath = hou.ui.selectFile("", "Select Mask")
+
+    if len(filePath) > 0:
+        lineEdit.setText(filePath)
+
+        painter = getPainterHDA()
+        if painter != None:
+            painter.parm("mask_texture").set(filePath)
+            painter.parm("togglemask").set(0)
+        else:
+            hou.ui.displayMessage("Ahoy! We be missin the Painter Node! {PaintSkinViz Function - 342}", ["Ok"])
+    else:
+        hou.ui.displayMessage("Arrrgh! We cantg load that texture for some reason! {PaintSkinViz Function - 345}", ["Ok"])
+
+def paintSkinViz():
+    
+    setNoLighting()
+    painterhda = getPainterHDA()
+
+    if painterhda != None:
+        painterhda.parm("paintred").pressButton()
+        toggleShrinkMaskParms(False)
+        togglePaintTools(True)
+        handleNodeViz(1)
+    else:
+        hou.ui.displayMessage("Ahoy! We be missin the Painter Node! {PaintSkinViz Function - 358}", ["Ok"])
+        
+
+def paintShrinkMask():
+    
+    setNoLighting()
+    painterhda = getPainterHDA()
+
+    if painterhda != None:
+        painterhda.parm("paintgreen").pressButton()
+        toggleShrinkMaskParms(True)
+        togglePaintTools(True)
+        handleNodeViz(1)
+    else:
+        hou.ui.displayMessage("Ahoy! We be missin the Painter Node! {PaintShrinkMask Function - 349}", ["Ok"])
+
+
+def updateBlurValue():
+    painterhda = getPainterHDA()
+    slider = mainWindow.findChild(QtWidgets.QSlider, "blur_slider")
+    
+    if painterhda != None:
+        painterhda.parm("blurslider").set(slider.value())
+
+
+def paintClothingViz():
+    
+    setNoLighting()
+    painterhda = getPainterHDA()
+
+    if painterhda != None:
+        painterhda.parm("paintblue").pressButton()
+        toggleShrinkMaskParms(False)
+        togglePaintTools(True)
+        handleNodeViz(1) 
+    else:
+        hou.ui.displayMessage("Ahoy! We be missin the Painter booty! {PaintClothingViz Function - 370}", ["Ok"])
+
+
+def exitPainting():
+    setNormalLighting()
+    painterhda = getPainterHDA()
+
+    if painterhda != None:
+        painterhda.parm("exitPainting").pressButton()
+        toggleShrinkMaskParms(False)
+        togglePaintTools(False)
+        handleNodeViz(0)
+        setShrinkValue()
+    else:
+        hou.ui.displayMessage("Ahoy! We be missin the Painter Node! {ExitPainting Function - 384}", ["Ok"])
+
+def updateDilateValue():
+    painterhda = getPainterHDA()
+    slider = mainWindow.findChild(QtWidgets.QSlider, "dilate_slider")
+    label = mainWindow.findChild(QtWidgets.QLabel, "dilate_label")
+
+    if painterhda != None:
+        painterhda.parm("dilatesize").set(slider.value())
+        label.setText("Dilate: " + str(slider.value()))
+
+
+def updatePaintingTools():
+    paintNode = getPainterHDA()
+    symparm = paintNode.parm("symradio")
+    symbtn = mainWindow.findChild(QtWidgets.QPushButton, "sym_btn")
+
+    if symparm.eval() == 1:
+        symparm.set(0)
+        symbtn.setText("Symmetry - Off")
+    else:
+        symparm.set(1)
+        symbtn.setText("Symmetry - On")
+
+
+def toggleClothingInPainting():
+    painterNode = getPainterHDA()
+    clothTemplate = painterNode.node("OUT_Clothing")
+
+    if clothTemplate != None:
+        if clothTemplate.isTemplateFlagSet():
+            clothTemplate.setTemplateFlag(False)
+        else:
+            clothTemplate.setTemplateFlag(True)
+    else:
+        hou.ui.displayMessage("Ahoy! We be missin the Cloth Template Node! {Toggle Cloth Function - 419}", ["Ok"])
+
+
+
+def setMaskPath():
+    #get path to user mask
+    filePath = hou.ui.selectFile("", "Select Location", file_type=hou.fileType.Directory)
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "mask_path")
+
+    if len(filePath) > 0:
+        lineEdit.setText(filePath)
+    else:
+        lineEdit.setText("No Path Set...")
+
+
+
+def exportMasks():
+    painterhda = getPainterHDA()
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "mask_path")
+    filename = mainWindow.findChild(QtWidgets.QLineEdit, "mask_file_name")
+    
+    
+
+    if len(lineEdit.text()) > 0 and lineEdit.text() != "   No Path Set..."  and len(filename.text()) > 0:
+        finalPath = lineEdit.text() + filename.text()
+
+        painterhda.parm("out_path").set(finalPath)
+        painterhda.parm("tex_res").set(getResolution())
+        painterhda.parm("layervalue").set(getLayer())
+
+        if painterhda != None:
+            painterhda.parm("render").pressButton()
+        else:
+            hou.ui.displayMessage("Ahoy! We be missin the Painter HDA! {ExportMasks Function - 452}", ["Ok"])
+    else:
+        hou.ui.displayMessage("Avast! We be needing a path to export masks to, Matey", ["Ok"])
+###################################################
+
+
+
+
+###################################################
+#Load FBX File
+def loadFbx():
+
+    #get path to user fbx file
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "line_name")
+    filePath = ""
+
+    lineEdit.setText(filePath)
+    filePath = hou.ui.selectFile("", "Select FBX")
+    
+    if len(filePath) > 0:
+        #look for the base cloth node
+        clothNode = getClothFBx()
+        clothNode.setDisplayFlag(True)
+        wizard = getWizardNode()
+        wizard.parm("clothinput").set("")
+        fileNode = clothNode.node("Fbx_File")
+            
+        if fileNode != None:
+            fileNode.parm("file").set(filePath)
+            fileNode.parm("reload").pressButton()
+
+        #Reset all Painting
+        painterhda = getPainterHDA()
+        if painterhda != None:
+            painterhda.parm("resetpainting").pressButton()
+        
+        #Set the name of the current cloth we are working on
+        lineEdit.setText(" " + filePath)
+        setClothFileName()
+
+        frameAll()
+
+####################################################
+            
+            
+    
+        
+##################################################
+#Process clothing
+def setShrinkValue():
+    atlasNode = getAtlasClothing()
+    
+    if atlasNode != None:
+        shrinkval = atlasNode.parm("shrinkamount").eval()
+        lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "shrink_val_edit")
+        lineEdit.setText(str(shrinkval))
+
+
+def processClothing():
+    #print("processing clothing")
+    wizard = getWizardNode()
+        
+    #get the cloth node
+    clothNode = getClothFBx()
+    fileNode = clothNode.node("Fbx_File")
+    fileParm = fileNode.parm("file")
+
+    if clothNode != None:
+        if len(fileParm.eval()) > 0:
+            wizard.parm("clothinput").set(clothNode.path())
+            clothNode.setDisplayFlag(False)
+            setShrinkValue()
+        else:
+            hou.ui.displayMessage("Avast! You be needin to load an FBX mesh Matey!", ["Ok"])
+
+
+def setRigidGroup():
+    atlasNode = getAtlasClothing()
+    rigidEdit = mainWindow.findChild(QtWidgets.QLineEdit, "rigid_grp_edit")
+
+    if atlasNode != None:
+        atlasNode.parm("rigidgroup").set(rigidEdit.text())
+#################################################
+        
+        
+
+
+        
+#################################################
+#Export an FBX of the final cloth model
+def getFbxPath():
+
+    #get path to user location
+    filePath = hou.ui.selectFile("", "Select Location", file_type=hou.fileType.Directory)
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_path")
+
+    if len(filePath) > 0:
+        lineEdit.setText(filePath)
+        setShrinkValue()
+    else:
+        lineEdit.setText("No Path Set...")
+
+
+def exportFbx():
+    #print("exporting fbx")
+
+    exportNode = getExportNode()
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_path")
+    filename = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_file_name")
+
+    if len(lineEdit.text()) > 0 and lineEdit.text() != "  No Path Set..." and len(filename.text()) > 0:
+
+        finalPath = lineEdit.text() + filename.text()
+
+        if exportNode != None:
+            ropNode = exportNode.node("rop_fbx1")
+            ropNode.parm("sopoutput").set(finalPath)
+
+            exportNode = getExportNode()
+            nullNode = getExportNullNode(exportNode)
+
+            if nullNode != None:
+                nullNode.setName(getClothFilename(), True)
+
+            ropNode.parm("execute").pressButton()
+        else:
+            hou.ui.displayMessage("AAAARRRGH! We be missing the Export Node - {Export Function - 578}", ["Ok"])
+    else:
+        hou.ui.displayMessage("Avast! We be needing a path to export FBX to, Matey", ["Ok"])
+################################################
+
+
+
+
+################################################
+#UI Utilities
+def toggleShrinkMaskParms(vis):
+    blurslider = mainWindow.findChild(QtWidgets.QSlider, "blur_slider")
+    blurLabel = mainWindow.findChild(QtWidgets.QLabel, "blur_label")
+    blurslider.setVisible(vis)
+    blurLabel.setVisible(vis)
+
+def togglePaintTools(vis):
+    #print("Toggling Paint Tools - " + str(vis))
+    symbtn = mainWindow.findChild(QtWidgets.QPushButton, "sym_btn")
+    paintbtn = mainWindow.findChild(QtWidgets.QPushButton, "exit_painting")
+    clothvizbtn = mainWindow.findChild(QtWidgets.QPushButton, "cloth_viz_btn")
+    symbtn.setVisible(vis)
+    paintbtn.setVisible(vis)
+    clothvizbtn.setVisible(vis)
+
+def toggleUvView():
+    viewer = toolutils.sceneViewer()
+    viewport = viewer.curViewport()
+    print(viewport.name())
+################################################
+
+    
+    
+
+
+########################################################################
+#  Entry point for UI
+########################################################################
+def onCreateInterface():
+    global mainWindow
+
+    # Load the interface layout from the .ui file.  Need to make this relative
+    ui_file_path = folder
+    loader = QtUiTools.QUiLoader()
+    ui_file = QtCore.QFile(ui_file_path)
+    ui_file.open(QtCore.QFile.ReadOnly)
+    mainWindow = loader.load(ui_file)
+
+
+    #add the icon to the icon label
+    imagepath = icon
+    iconLabel = mainWindow.findChild(QtWidgets.QLabel, "icon_label")
+    iconLabel.setStyleSheet("background-image: url(" + imagepath + ");")
+
+    #attach load fbx button click
+    loadbtn = mainWindow.findChild(QtWidgets.QPushButton, "load_btn")
+    loadbtn.clicked.connect(loadFbx)
+
+
+    #attach body toggle button
+    bodytogglebtn = mainWindow.findChild(QtWidgets.QPushButton, "body_toggle")
+    bodytogglebtn.setText("Body Type - Male")
+    bodytogglebtn.clicked.connect(toggleBody)
+
+    bodyvizbtn = mainWindow.findChild(QtWidgets.QPushButton, "body_viz_btn")
+    bodyvizbtn.setText("Body Viz - On")
+    bodyvizbtn.clicked.connect(toggleBodyViz)
+    
+
+    #attach clothing processing click
+    clothingbtn = mainWindow.findChild(QtWidgets.QPushButton, "cloth_btn")
+    clothingbtn.clicked.connect(processClothing)
+
+    rigidgrpedit = mainWindow.findChild(QtWidgets.QLineEdit, "rigid_grp_edit")
+    rigidgrpedit.textChanged.connect(setRigidGroup)
+    rigidgrpedit.returnPressed.connect(setRigidGroup)
+    
+
+
+    #attach to Painting buttons
+    paintredbtn = mainWindow.findChild(QtWidgets.QPushButton, "paintred")
+    paintredbtn.clicked.connect(paintSkinViz)
+
+    paintgreenbtn = mainWindow.findChild(QtWidgets.QPushButton, "paintgreen")
+    paintgreenbtn.clicked.connect(paintShrinkMask)
+
+    paintbluebtn = mainWindow.findChild(QtWidgets.QPushButton, "paintblue")
+    paintbluebtn.clicked.connect(paintClothingViz)
+
+    exitpaintbtn = mainWindow.findChild(QtWidgets.QPushButton, "exit_painting")
+    exitpaintbtn.clicked.connect(exitPainting)
+
+    exportMasksbtn = mainWindow.findChild(QtWidgets.QPushButton, "export_masks")
+    exportMasksbtn.clicked.connect(exportMasks)
+
+    maskpathbtn = mainWindow.findChild(QtWidgets.QPushButton, "mask_path_btn")
+    maskpathbtn.clicked.connect(setMaskPath)
+
+    blurslider = mainWindow.findChild(QtWidgets.QSlider, "blur_slider")
+    blurslider.valueChanged.connect(updateBlurValue)
+    toggleShrinkMaskParms(False)
+
+    dilateslider = mainWindow.findChild(QtWidgets.QSlider, "dilate_slider")
+    dilateslider.valueChanged.connect(updateDilateValue)
+    dilatelabel = mainWindow.findChild(QtWidgets.QLabel, "dilate_label")
+    dilatelabel.setText("Dilate: " + str(dilateslider.value()))
+
+    symbtn = mainWindow.findChild(QtWidgets.QPushButton, "sym_btn")
+    symbtn.clicked.connect(updatePaintingTools)
+
+    loadmaskbtn = mainWindow.findChild(QtWidgets.QPushButton, "load_mask_btn")
+    loadmaskbtn.clicked.connect(loadMask)
+
+    clothToggle = mainWindow.findChild(QtWidgets.QPushButton, "cloth_viz_btn")
+    clothToggle.clicked.connect(toggleClothingInPainting)
+    togglePaintTools(False)
+
+
+
+    #Init Resolution Dropdown
+    resbox = mainWindow.findChild(QtWidgets.QComboBox, "res_box")
+    resbox.setCurrentIndex(1)
+
+
+
+    #attach all settings buttons
+    frameallbtn = mainWindow.findChild(QtWidgets.QPushButton, "frameall_btn")
+    frameallbtn.clicked.connect(frameAll)
+
+    nolightbtn = mainWindow.findChild(QtWidgets.QPushButton, "no_light_btn")
+    nolightbtn.clicked.connect(setNoLighting)
+
+    normlightbtn = mainWindow.findChild(QtWidgets.QPushButton, "normal_light_btn")
+    normlightbtn.clicked.connect(setNormalLighting)
+
+
+    #attach fbx export btns
+    exportfbxbtn = mainWindow.findChild(QtWidgets.QPushButton, "fbx_path_btn")
+    exportfbxbtn.pressed.connect(getFbxPath)
+
+    exportbtn = mainWindow.findChild(QtWidgets.QPushButton, "export_cloth_btn")
+    exportbtn.clicked.connect(exportFbx)
+
+    #skinning ui
+    skinbtn = mainWindow.findChild(QtWidgets.QPushButton, "skin_btn")
+    skinbtn.setVisible(False)
+    skinlabel = mainWindow.findChild(QtWidgets.QLabel, "skin_label")
+    skinlabel.setVisible(False)
+
+
+
+    #Initialize the system
+    createClothNode()
+    createWizardNode()
+    getSceneInfo()
+    
+    return mainWindow
+########################################################################
+]]></script>
+    <includeInPaneTabMenu menu_position="0" create_separator="false"/>
+    <includeInToolbarMenu menu_position="101" create_separator="false"/>
+    <help><![CDATA[]]></help>
+  </interface>
+</pythonPanelDocument>
