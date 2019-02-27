@@ -16,8 +16,8 @@ import hou
 import toolutils
 from hutil.Qt import QtCore, QtUiTools, QtWidgets
 
-folder = "%s/Houdini16.5/python_panels/Atlas_Character_Builder.ui" % os.environ["HSITE"]
-icon = "%s/Houdini16.5/python_panels/icons/atlas_icon_64.png" % os.environ["HSITE"]
+folder = "%s/Houdini16.5/python_panels/Atlas_Character_Builder.ui" % os.environ["HOME"]
+icon = "%s/Houdini16.5/python_panels/icons/atlas_icon_64.png" % os.environ["HOME"]
 
 
 ###################################################
@@ -88,6 +88,18 @@ def getExportNode():
     return exportNode
 
 
+def getCleanNode():
+    exportNode = getExportNode()
+    children = exportNode.children()
+
+    cleanNode = None
+    for node in children:
+        if node.type().name() == "clean":
+            cleanNode = node
+
+    return cleanNode
+
+
 def getSceneInfo():
     clothNode = getClothFBx()
 
@@ -125,20 +137,21 @@ def handleNodeViz(painting):
     bodies = getBodiesNode()
     manager = getClothingManager()
     paint = getPaintingNode()
-    skin = getSkinningNode()
+    #skin = getSkinningNode()
     clearNode = getClearNode()
 
     if painting == 1:
         bodies.setDisplayFlag(False)
         manager.setDisplayFlag(False)
-        skin.setDisplayFlag(False)
+        #skin.setDisplayFlag(False)
         paint.setDisplayFlag(True)
     elif painting == 0:
         bodies.setDisplayFlag(True)
         manager.setDisplayFlag(True)
-        skin.setDisplayFlag(True)
+        #skin.setDisplayFlag(True)
         paint.setDisplayFlag(False)
-        clearNode.setCurrent(True, False)
+        clearNode.setCurrent(True, True)
+
 
 def getClothFilename():
     clothnode = getClothFBx()
@@ -156,6 +169,7 @@ def getClothFilename():
         finalname = namesplit[0]
     
     return finalname
+
 
 def setClothFileName():
 
@@ -261,28 +275,28 @@ def getResolution():
 def getLayer():
     layerbox = mainWindow.findChild(QtWidgets.QComboBox, "layer_box")
     currentID = layerbox.currentIndex()
-    finalID = 0
+    finalID = currentID
 
-    if currentID == 0:
-        finalID = 0
-    elif currentID == 1:
-        finalID = 0.01
-    elif currentID == 2:
-        finalID = 0.05
-    elif currentID == 3:
-        finalID = 0.1
-    elif currentID == 4:
-        finalID = 0.15
-    elif currentID == 5:
-        finalID = 0.2
-    elif currentID == 6:
-        finalID = 0.25
-    elif currentID == 7:
-        finalID = 0.3
-    elif currentID == 8:
-        finalID = 0.35
-    elif currentID == 9:
-        finalID = 0.4
+    # if currentID == 0:
+    #     finalID = 0
+    # elif currentID == 1:
+    #     finalID = 0.01
+    # elif currentID == 2:
+    #     finalID = 0.05
+    # elif currentID == 3:
+    #     finalID = 0.1
+    # elif currentID == 4:
+    #     finalID = 0.15
+    # elif currentID == 5:
+    #     finalID = 0.2
+    # elif currentID == 6:
+    #     finalID = 0.25
+    # elif currentID == 7:
+    #     finalID = 0.3
+    # elif currentID == 8:
+    #     finalID = 0.35
+    # elif currentID == 9:
+    #     finalID = 0.4
     
     return finalID
 ###################################################
@@ -347,11 +361,11 @@ def loadMask():
         painter = getPainterHDA()
         if painter != None:
             painter.parm("mask_texture").set(filePath)
-            painter.parm("togglemask").set(0)
+            painter.parm("togglemask").set(1)
         else:
             hou.ui.displayMessage("Ahoy! We be missin the Painter Node! {PaintSkinViz Function - 342}", ["Ok"])
     else:
-        hou.ui.displayMessage("Arrrgh! We cantg load that texture for some reason! {PaintSkinViz Function - 345}", ["Ok"])
+        hou.ui.displayMessage("Arrrgh! We cant load that texture for some reason! {PaintSkinViz Function - 345}", ["Ok"])
 
 def paintSkinViz():
     
@@ -494,7 +508,7 @@ def exportMasks():
 #Load FBX File
 def loadFbx():
 
-    #get path to user fbx file
+    #get path to user fbx file 
     lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "line_name")
     filePath = ""
 
@@ -589,6 +603,8 @@ def exportFbx():
     #print("exporting fbx")
 
     exportNode = getExportNode()
+    cleanNode = getCleanNode()
+
     lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_path")
     filename = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_file_name")
 
@@ -605,6 +621,9 @@ def exportFbx():
 
             if nullNode != None:
                 nullNode.setName(getClothFilename(), True)
+
+            if cleanNode != None:
+                cleanNode.setName(getClothFilename(), True)
 
             ropNode.parm("execute").pressButton()
         else:
@@ -712,8 +731,10 @@ def onCreateInterface():
 
     dilateslider = mainWindow.findChild(QtWidgets.QSlider, "dilate_slider")
     dilateslider.valueChanged.connect(updateDilateValue)
+    dilateslider.setVisible(False)
     dilatelabel = mainWindow.findChild(QtWidgets.QLabel, "dilate_label")
     dilatelabel.setText("Dilate: " + str(dilateslider.value()))
+    dilatelabel.setVisible(False)
 
     symbtn = mainWindow.findChild(QtWidgets.QPushButton, "sym_btn")
     symbtn.clicked.connect(updatePaintingTools)
