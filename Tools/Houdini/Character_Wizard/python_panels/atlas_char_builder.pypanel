@@ -5,7 +5,7 @@
  used by the application.  Note, that two definitions of the
  same interface or of the interfaces menu are not allowed
  in a single file. -->
-  <interface name="atlas_character_builder" label="Atlas Character Builder" icon="$HOME/houdini16.5/config/Icons/atlas_icon.png" help_url="">
+  <interface name="atlas_character_builder" label="Atlas Character Builder" icon="$HOME/houdini16.5/config/Icons/atlas_icon.png" showNetworkNavigationBar="false" help_url="">
     <script><![CDATA[########################################################################
 # Atlas Character Wizard
 ########################################################################
@@ -16,8 +16,11 @@ import hou
 import toolutils
 from hutil.Qt import QtCore, QtUiTools, QtWidgets
 
-folder = "%s/Houdini16.5/python_panels/Atlas_Character_Builder.ui" % os.environ["HOME"]
-icon = "%s/Houdini16.5/python_panels/icons/atlas_icon_64.png" % os.environ["HOME"]
+fullVersion = hou.applicationVersion()
+finalversion = str(fullVersion[0]) + "." + str(fullVersion[1])
+
+folder = os.environ["HOME"] + "/Houdini" + finalversion + "/python_panels/Atlas_Character_Builder.ui"
+icon = os.environ["HOME"] + "/Houdini" + finalversion + "/python_panels/icons/atlas_icon_64.png"
 
 
 ###################################################
