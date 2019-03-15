@@ -5,9 +5,9 @@
  used by the application.  Note, that two definitions of the
  same interface or of the interfaces menu are not allowed
  in a single file. -->
-  <interface name="atlas_character_builder" label="Atlas Character Builder" icon="$HOME/houdini16.5/config/Icons/atlas_icon.png" showNetworkNavigationBar="false" help_url="">
+  <interface name="atlas_character_builder" label="Atlas Character Builder" icon="$HOME/houdini16.5/config/Icons/atlas_icon.png" help_url="">
     <script><![CDATA[########################################################################
-# Atlas Character Wizard
+#Atlas Character Wizard
 ########################################################################
 
 import sys
@@ -16,11 +16,24 @@ import hou
 import toolutils
 from hutil.Qt import QtCore, QtUiTools, QtWidgets
 
+
+###############################################################
+#Get current version of Houdini
 fullVersion = hou.applicationVersion()
 finalversion = str(fullVersion[0]) + "." + str(fullVersion[1])
 
 folder = os.environ["HOME"] + "/Houdini" + finalversion + "/python_panels/Atlas_Character_Builder.ui"
 icon = os.environ["HOME"] + "/Houdini" + finalversion + "/python_panels/icons/atlas_icon_64.png"
+##############################################################
+
+
+
+##############################################################
+#Find out the License installed
+curLicense = hou.licenseCategory()
+##############################################################
+
+
 
 
 ###################################################
@@ -106,6 +119,7 @@ def getCleanNode():
 def getSceneInfo():
     clothNode = getClothFBx()
 
+    #Check to see if there is a mesh already assigned to the cloth node
     if clothNode != None:
         filenode = clothNode.node("Fbx_File")
         path = filenode.parm("file").eval()
@@ -117,8 +131,48 @@ def getSceneInfo():
         else:
             lineEdit.setText("No Fbx Loaded")
     else:
-        hou.ui.displayMessage("Shiver me Timbers! We be needin a Cloth Node! {GetSceneInfo Function - 97}", ["Ok"])
+        hou.ui.displayMessage("Shiver me Timbers! We be needin a Cloth Node! {Get Scene Info Function}", ["Ok"])
 
+    #Check to see if meshes are assigned to the shrink and projection paths
+    wizardNode = getWizardNode()
+    if wizardNode != None:
+        shrinkPath = wizardNode.parm("shrink_shape_geo").eval()
+        projectionPath = wizardNode.parm("projection_shape_geo").eval()
+        if len(shrinkPath) > 0:
+            shrinkEdit = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkshapelineedit")
+            shrinkEdit.setText(shrinkPath)
+        
+        if len(projectionPath) > 0:
+            projectionEdit = mainWindow.findChild(QtWidgets.QLineEdit, "projectionShapePath")
+            projectionEdit.setText(projectionPath)
+    else:
+        hou.ui.displayMessage("Shiver me Timbers! We be needin a Cloth Node! {Get Scene Info Function}", ["Ok"])
+
+
+#Used to intialize all the sliders and numerical values
+def initAdvancedSliders():
+    togglePreview()
+    updateShrinkValue()
+    updateHighFatValue()
+    updateUVSmoothIters()
+
+    #set default values
+    maxDistSlider = mainWindow.findChild(QtWidgets.QSlider, "MaxDistSlider")
+    maxDistSlider.setValue(8)
+    updateMaxDistValue()
+    
+
+    deltaPSlider = mainWindow.findChild(QtWidgets.QSlider, "deltapstrengthslider")
+    deltaPSlider.setValue(61)
+    updateDeltaPValue()
+
+    updateSmoothDistValue()
+    updateMaxPntsValue()
+    updateIterationsValue()
+    updateDistInfluenceValue()
+
+    updateNumericalValues()
+    
 
 
 def getExportNullNode(parent):
@@ -132,7 +186,7 @@ def getExportNullNode(parent):
         
         return nullNode
     else:
-        hou.ui.displayMessage("Avast! We have no Export Node, Matey {GetSceneInfo Function - 112}", ["Ok"])
+        hou.ui.displayMessage("Avast! We have no Export Node, Matey {Get Export Null Node Function}", ["Ok"])
 
 
 
@@ -177,18 +231,29 @@ def getClothFilename():
 def setClothFileName():
 
     finalname = getClothFilename()
+    
+    #remove the prefix so we can add it later
+    token = "_"
+    findresult = finalname.find(token)
+    cleanedname = finalname[findresult+1:]
 
     fbxfilename = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_file_name")
-    fbxfilename.setText(finalname + ".fbx")
+    if curLicense == hou.licenseCategoryType.Apprentice or curLicense == hou.licenseCategoryType.ApprenticeHD:
+        fbxfilename.setText("SM_" + cleanedname + ".bgeo")
+    else:
+        fbxfilename.setText("SM_" + cleanedname + ".fbx")
     
 
     maskfilename = mainWindow.findChild(QtWidgets.QLineEdit, "mask_file_name")
-    maskfilename.setText(finalname + "_M.tga")
+    maskfilename.setText("T_" + cleanedname + "_M.tga")
+
+    cleanNode = getCleanNode()
+    if cleanNode != None:
+        cleanNode.setName(getClothFilename(), True)
 
 
 def checkFileNames():
     print("Checking file names!")
-
 ####################################################
 
 
@@ -279,27 +344,6 @@ def getLayer():
     layerbox = mainWindow.findChild(QtWidgets.QComboBox, "layer_box")
     currentID = layerbox.currentIndex()
     finalID = currentID
-
-    # if currentID == 0:
-    #     finalID = 0
-    # elif currentID == 1:
-    #     finalID = 0.01
-    # elif currentID == 2:
-    #     finalID = 0.05
-    # elif currentID == 3:
-    #     finalID = 0.1
-    # elif currentID == 4:
-    #     finalID = 0.15
-    # elif currentID == 5:
-    #     finalID = 0.2
-    # elif currentID == 6:
-    #     finalID = 0.25
-    # elif currentID == 7:
-    #     finalID = 0.3
-    # elif currentID == 8:
-    #     finalID = 0.35
-    # elif currentID == 9:
-    #     finalID = 0.4
     
     return finalID
 ###################################################
@@ -507,8 +551,9 @@ def exportMasks():
 
 
 
+
 ###################################################
-#Load FBX File
+#Load FBX Files for Main Clothing, Shrink Shape, Projection Shape
 def loadFbx():
 
     #get path to user fbx file 
@@ -540,11 +585,70 @@ def loadFbx():
         setClothFileName()
 
         frameAll()
+    else:
+        hou.ui.displayMessage("Ahoy! That is not a valid path for the FBX File! {Load FBX Function}", ["Ok"])
 
+
+
+
+def loadShrinkShape():
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkshapelineedit")
+    filePath = hou.ui.selectFile("", "Select Shrink Shape", file_type=hou.fileType.Geometry)
+    wizardNode = getWizardNode()
+
+    if len(filePath) > 0:
+        lineEdit.setText(filePath)
+        if wizardNode != None:
+            wizardNode.parm("shrink_shape_geo").set(filePath)
+        else:
+            hou.ui.displayMessage("Ahoy! Cannot find the Wizard Node! {Load Shrink Shape Function}", ["Ok"])    
+    else:
+        hou.ui.displayMessage("Ahoy! That is not a valid path for the Shrink Shape! {Load Shrink Shape Function}", ["Ok"])
+
+
+
+def loadProjectionShape():
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "projectionShapePath")
+    filePath = hou.ui.selectFile("", "Select Projection Shape", file_type=hou.fileType.Geometry)
+    wizardNode = getWizardNode()
+
+    if len(filePath) > 0:
+        lineEdit.setText(filePath)
+        if wizardNode != None:
+            wizardNode.parm("projection_shape_geo").set(filePath)
+        else:
+            hou.ui.displayMessage("Ahoy! Cannot find the Wizard Node! {Load Projection Shape Function}", ["Ok"])
+    else:
+        hou.ui.displayMessage("Ahoy! That is not a valid path for the Projection Shape! {Load Projection Shape Function}", ["Ok"])
+
+
+
+def updateShrinkPath():
+    wizardNode = getWizardNode()
+    shrinkLE = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkshapelineedit")
+
+    if wizardNode != None:
+        wizardNode.parm("shrink_shape_geo").set(shrinkLE.text())
+        if len(shrinkLE.text()) == 0:
+            shrinkLE.setText("  No Shrink Shape Loaded...")
+
+
+
+def updateProjectionPath():
+    wizardNode = getWizardNode()
+    projectionLE = mainWindow.findChild(QtWidgets.QLineEdit, "projectionShapePath")
+
+    if wizardNode != None:
+        wizardNode.parm("projection_shape_geo").set(projectionLE.text())
+        if len(projectionLE.text()) == 0:
+            projectionLE.setText("  No Projection Shape Loaded...")
 ####################################################
             
-            
-    
+
+
+
+
+
         
 ##################################################
 #Process clothing
@@ -602,9 +706,9 @@ def getFbxPath():
         lineEdit.setText("No Path Set...")
 
 
+
 def exportFbx():
     #print("exporting fbx")
-
     exportNode = getExportNode()
     cleanNode = getCleanNode()
 
@@ -616,7 +720,39 @@ def exportFbx():
         finalPath = lineEdit.text() + filename.text()
 
         if exportNode != None:
-            ropNode = exportNode.node("rop_fbx1")
+            ropNode = exportNode.node("kl_advanced_fbx_export1")
+            ropNode.parm("output_path").set(finalPath)
+
+            exportNode = getExportNode()
+            nullNode = getExportNullNode(exportNode)
+
+            if nullNode != None:
+                nullNode.setName(getClothFilename(), True)
+
+            if cleanNode != None:
+                cleanNode.setName(getClothFilename(), True)
+
+            ropNode.parm("exportBtn").pressButton()
+        else:
+            hou.ui.displayMessage("AAAARRRGH! We be missing the Export Node - {Export Function - 578}", ["Ok"])
+    else:
+        hou.ui.displayMessage("Avast! We be needing a path to export FBX to, Matey", ["Ok"])
+
+
+def exportBgeo():
+    #print("exporting to bgeo!")
+    exportNode = getExportNode()
+    cleanNode = getCleanNode()
+
+    lineEdit = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_path")
+    filename = mainWindow.findChild(QtWidgets.QLineEdit, "fbx_file_name")
+
+    if len(lineEdit.text()) > 0 and lineEdit.text() != "  No Path Set..." and len(filename.text()) > 0:
+
+        finalPath = lineEdit.text() + filename.text() + ".bgeo"
+
+        if exportNode != None:
+            ropNode = exportNode.node("export_to_bgeo")
             ropNode.parm("sopoutput").set(finalPath)
 
             exportNode = getExportNode()
@@ -638,6 +774,9 @@ def exportFbx():
 
 
 
+
+
+
 ################################################
 #UI Utilities
 def toggleShrinkMaskParms(vis):
@@ -645,6 +784,7 @@ def toggleShrinkMaskParms(vis):
     blurLabel = mainWindow.findChild(QtWidgets.QLabel, "blur_label")
     blurslider.setVisible(vis)
     blurLabel.setVisible(vis)
+
 
 def togglePaintTools(vis):
     #print("Toggling Paint Tools - " + str(vis))
@@ -655,14 +795,289 @@ def togglePaintTools(vis):
     paintbtn.setVisible(vis)
     clothvizbtn.setVisible(vis)
 
+
 def toggleUvView():
     viewer = toolutils.sceneViewer()
     viewport = viewer.curViewport()
     print(viewport.name())
+
+
+def togglePreview():
+    atlasClothing = getAtlasClothing()
+    if atlasClothing != None:
+        toggle = mainWindow.findChild(QtWidgets.QCheckBox, "preview_toggle")
+        atlasClothing.parm("previewswitch").set(toggle.isChecked())
+
+
+def updateShrinkValue():
+    shrinkSlider = mainWindow.findChild(QtWidgets.QSlider, "blendshrinkslider")
+    atlasClothing = getAtlasClothing()
+    if atlasClothing != None:
+        finalval = float(shrinkSlider.value())/100.0
+        atlasClothing.parm("BlendShrink").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Value Function}", ["Ok"])
+
+
+def updateHighFatValue():
+    highFatSlider = mainWindow.findChild(QtWidgets.QSlider, "highfatslider")
+    atlasClothing = getAtlasClothing()
+    
+    if atlasClothing != None:
+        finalval = float(highFatSlider.value())/100.0
+        atlasClothing.parm("DeltaMapMaster").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Value Function}", ["Ok"])
+
+
+def updateDeltaPValue():
+    deltaPSlider = mainWindow.findChild(QtWidgets.QSlider, "deltapstrengthslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        finalval = float(deltaPSlider.value())/10.0
+        atlasClothing.parm("Preview_DeltaP_Strength").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update DeltaP Value Function}", ["Ok"])
+
+
+def updateUVSmoothIters():
+    uvSmoothSlider = mainWindow.findChild(QtWidgets.QSlider, "uvSmoothIterationsSlider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("uvSmoothIterations").set(uvSmoothSlider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {updateUVSmoothIters Function}", ["Ok"])
+
+
+def updateMaxDistValue():
+    maxDistSlider = mainWindow.findChild(QtWidgets.QSlider, "MaxDistSlider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        finalval = float(maxDistSlider.value())/100.0
+        atlasClothing.parm("MaxDistance2").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {updateMaxDistValue Function}", ["Ok"])
+
+
+def updateSmoothDistValue():
+    smoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "smoothdistslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("SmoothDistance2").set(smoothdistslider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Smooth Distance Function}", ["Ok"])
+
+
+def updateMaxPntsValue():
+    maxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "maxpntsslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("MaxPoints2").set(maxpntsslider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Max Points Slider Function}", ["Ok"])
+
+
+def updateIterationsValue():
+    iterslider = mainWindow.findChild(QtWidgets.QSlider, "iteratrionsslider")
+    atlasClothing = getAtlasClothing()
+    
+    if atlasClothing != None:
+        atlasClothing.parm("iterations").set(iterslider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Iterations Slider Function}", ["Ok"])
+
+
+def updateDistInfluenceValue():
+    distInfluenceSlider = mainWindow.findChild(QtWidgets.QSlider, "distinfluenceslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        finalval = float(distInfluenceSlider.value())/100.0
+        atlasClothing.parm("distanceInfluence").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Distance Influence Function}", ["Ok"])
+
+
+def updateBodyOffsetValue():
+    bodyOffsetSlider = mainWindow.findChild(QtWidgets.QSlider, "bodyoffsetslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("BodyOffset").set(bodyOffsetSlider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Body Offset Function}", ["Ok"])
+
+
+def updateShrinkSmthDistValue():
+    shrinksmoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothdistslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        finalval = float(shrinksmoothdistslider.value())/10.0
+        atlasClothing.parm("ShrinkSmoothDistance").set(finalval)
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Body Offset Function}", ["Ok"])
+
+
+def updateShrinkMaxPntsValue():
+    shrinkmaxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxpntsslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("ShrinkMaxPoints").set(shrinkmaxpntsslider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Max Points Function}", ["Ok"])
+
+
+def updateShrinkMaxDist():
+    shrinkmaxdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxdistslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("ShrinkMaxDistance").set(float(shrinkmaxdistslider.value()))
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Max Distance Function}", ["Ok"])
+
+
+def updateShrinkPeakDist():
+    shrinkPeakDist = mainWindow.findChild(QtWidgets.QSlider, "shrinkpeakdistslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("peakdist").set(float(shrinkPeakDist.value()))
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Peak Distance Function}", ["Ok"])
+
+    
+def updateShrinkPosToggle():
+    setshrinkpostoggle = mainWindow.findChild(QtWidgets.QCheckBox, "setshrinkpostoggle")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("set_shrink_position").set(setshrinkpostoggle.isChecked())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Pos Toggle Function}", ["Ok"])
+
+
+def updateShrinkNeighPntsToggle():
+    shrinksmoothneighpntstoggle = mainWindow.findChild(QtWidgets.QCheckBox, "shrinksmoothneighpntstoggle")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("smoothneighbours").set(shrinksmoothneighpntstoggle.isChecked())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Neighbours Toggle Function}", ["Ok"])
+
+def updateShrinkSmoothIterations():
+    shrinksmoothitersslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothitersslider")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("smoothIterations").set(shrinksmoothitersslider.value())
+    else:
+        hou.ui.displayMessage("Avast! We have no Atlas Clothing node! {Update Shrink Smooth Iterations Function}", ["Ok"])
+
+def updateUVFourToggle():
+    uv4checkbox = mainWindow.findChild(QtWidgets.QCheckBox, "uv4checkbox")
+    atlasClothing = getAtlasClothing()
+
+    if atlasClothing != None:
+        atlasClothing.parm("writeuv4").set(uv4checkbox.isChecked())
+
+
+def updateNumericalValues():
+    #Shrink Blend Group
+    shrinkVal = mainWindow.findChild(QtWidgets.QLineEdit, "blendshrinkvalue")
+    shrinkSlider = mainWindow.findChild(QtWidgets.QSlider, "blendshrinkslider")
+    finalval = float(shrinkSlider.value())/100.0
+    shrinkVal.setText(str(finalval))
+
+    #HF Blend Group
+    highFatSlider = mainWindow.findChild(QtWidgets.QSlider, "highfatslider")
+    hfvalue = mainWindow.findChild(QtWidgets.QLineEdit, "HFValue")
+    finalval = float(highFatSlider.value())/100.0
+    hfvalue.setText(str(finalval))
+
+    #DeltaP Slider Group
+    deltaPSlider = mainWindow.findChild(QtWidgets.QSlider, "deltapstrengthslider")
+    deltaPVal = mainWindow.findChild(QtWidgets.QLineEdit, "DPValue")
+    finalval = float(deltaPSlider.value())/10.0
+    deltaPVal .setText(str(finalval))
+
+    #uv smooth iters slider group
+    uvSmoothSlider = mainWindow.findChild(QtWidgets.QSlider, "uvSmoothIterationsSlider")
+    uvsmoothval = mainWindow.findChild(QtWidgets.QLineEdit, "uvsmoothval")
+    uvsmoothval.setText(str(uvSmoothSlider.value()))
+
+    #max dist slider group
+    maxDistSlider = mainWindow.findChild(QtWidgets.QSlider, "MaxDistSlider")
+    maxDistVal = mainWindow.findChild(QtWidgets.QLineEdit, "maxDistVal")
+    finalval = float(maxDistSlider.value())/100.0
+    maxDistVal.setText(str(finalval))
+
+    #smooth distance slider group
+    smoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "smoothdistslider")
+    smoothdistval = mainWindow.findChild(QtWidgets.QLineEdit, "smoothdistval")
+    smoothdistval.setText(str(smoothdistslider.value()))
+
+    #Max Points Slider Group
+    maxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "maxpntsslider")
+    maxpntsval = mainWindow.findChild(QtWidgets.QLineEdit, "maxpntsval")
+    maxpntsval.setText(str(maxpntsslider.value()))
+
+    #Iterations Slider Group
+    iterslider = mainWindow.findChild(QtWidgets.QSlider, "iteratrionsslider")
+    iterval = mainWindow.findChild(QtWidgets.QLineEdit, "iterationsval")
+    iterval.setText(str(iterslider.value()))
+
+    #Distance Influence Slider Group
+    distInfluenceSlider = mainWindow.findChild(QtWidgets.QSlider, "distinfluenceslider")
+    distInfVal = mainWindow.findChild(QtWidgets.QLineEdit, "distinfluenceval")
+    finalval = float(distInfluenceSlider.value())/100
+    distInfVal.setText(str(finalval))
+
+    #Body Offset Slider Group
+    bodyOffsetSlider = mainWindow.findChild(QtWidgets.QSlider, "bodyoffsetslider")
+    bodyOffsetVal = mainWindow.findChild(QtWidgets.QLineEdit, "bodyoffsetval")
+    bodyOffsetVal.setText(str(bodyOffsetSlider.value()))
+
+    #Shrink Smooth Dist Slider Group
+    shrinksmoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothdistslider")
+    shrinksmthdistval = mainWindow.findChild(QtWidgets.QLineEdit, "shrinksmoothdistval")
+    finalval = float(shrinksmoothdistslider.value())/10.0
+    shrinksmthdistval.setText(str(finalval))
+
+    #Shrink Max Pnts Slider Group
+    shrinkmaxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxpntsslider")
+    shrinksmthdistval = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkmaxpntsval")
+    shrinksmthdistval.setText(str(shrinkmaxpntsslider.value()))
+
+    #Shrink MaxDist Slider Group
+    shrinkmaxdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxdistslider")
+    shrinkmaxdistval = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkmaxdistval")
+    shrinkmaxdistval.setText(str(shrinkmaxdistslider.value()))
+
+    #Shrink Peak Dist Slider Group
+    shrinkPeakDist = mainWindow.findChild(QtWidgets.QSlider, "shrinkpeakdistslider")
+    shrinkPeakDistVal = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkpeakdistval")
+    shrinkPeakDistVal.setText(str(shrinkPeakDist.value()))
+
+    #Shrink Smooth Iterations Slider Group
+    shrinksmoothitersslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothitersslider")
+    shrinksmoothitersval = mainWindow.findChild(QtWidgets.QLineEdit, "shrinksmoothitersval")
+    shrinksmoothitersval.setText(str(shrinksmoothitersslider.value()))
 ################################################
 
     
     
+
+
+
 
 
 ########################################################################
@@ -775,6 +1190,16 @@ def onCreateInterface():
     exportbtn = mainWindow.findChild(QtWidgets.QPushButton, "export_cloth_btn")
     exportbtn.clicked.connect(exportFbx)
 
+    begoExportBtn = mainWindow.findChild(QtWidgets.QPushButton, "bgeo_export_btn")
+    begoExportBtn.clicked.connect(exportBgeo)
+
+    #determine which type of export to use
+    if curLicense == hou.licenseCategoryType.Apprentice or curLicense == hou.licenseCategoryType.ApprenticeHD:
+        exportbtn.setVisible(False)
+
+    if curLicense == hou.licenseCategoryType.Commercial or curLicense == hou.licenseCategoryType.Education:
+        begoExportBtn.setVisible(False)
+
     #skinning ui
     skinbtn = mainWindow.findChild(QtWidgets.QPushButton, "skin_btn")
     skinbtn.setVisible(False)
@@ -782,15 +1207,99 @@ def onCreateInterface():
     skinlabel.setVisible(False)
 
 
+    #start of Advanced UI set up
+    shrinkShapeBtn = mainWindow.findChild(QtWidgets.QPushButton, "loadShrinkBtn")
+    shrinkShapeBtn.clicked.connect(loadShrinkShape)
+
+    projectionShapeBtn = mainWindow.findChild(QtWidgets.QPushButton, "projectionShapeBtn")
+    projectionShapeBtn.clicked.connect(loadProjectionShape)
+
+    shrinkLE = mainWindow.findChild(QtWidgets.QLineEdit, "shrinkshapelineedit")
+    shrinkLE.textChanged.connect(updateShrinkPath)
+
+    projectionLE = mainWindow.findChild(QtWidgets.QLineEdit, "projectionShapePath")
+    projectionLE.textChanged.connect(updateProjectionPath)
+
+    previewToggle = mainWindow.findChild(QtWidgets.QCheckBox, "preview_toggle")
+    previewToggle.clicked.connect(togglePreview)
+
+    shrinkSlider = mainWindow.findChild(QtWidgets.QSlider, "blendshrinkslider")
+    shrinkSlider.sliderReleased.connect(updateShrinkValue)
+    shrinkSlider.valueChanged.connect(updateNumericalValues)
+
+    highFatSlider = mainWindow.findChild(QtWidgets.QSlider, "highfatslider")
+    highFatSlider.sliderReleased.connect(updateHighFatValue)
+    highFatSlider.valueChanged.connect(updateNumericalValues)
+
+    deltaPSlider = mainWindow.findChild(QtWidgets.QSlider, "deltapstrengthslider")
+    deltaPSlider.sliderReleased.connect(updateDeltaPValue)
+    deltaPSlider.valueChanged.connect(updateNumericalValues)
+
+    uvSmoothSlider = mainWindow.findChild(QtWidgets.QSlider, "uvSmoothIterationsSlider")
+    uvSmoothSlider.sliderReleased.connect(updateUVSmoothIters)
+    uvSmoothSlider.valueChanged.connect(updateNumericalValues)
+
+    maxDistSlider = mainWindow.findChild(QtWidgets.QSlider, "MaxDistSlider")
+    maxDistSlider.sliderReleased.connect(updateMaxDistValue)
+    maxDistSlider.valueChanged.connect(updateNumericalValues)
+
+    smoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "smoothdistslider")
+    smoothdistslider.sliderReleased.connect(updateSmoothDistValue)
+    smoothdistslider.valueChanged.connect(updateNumericalValues)
+
+    maxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "maxpntsslider")
+    maxpntsslider.sliderReleased.connect(updateMaxPntsValue)
+    maxpntsslider.valueChanged.connect(updateNumericalValues)
+
+    iterslider = mainWindow.findChild(QtWidgets.QSlider, "iteratrionsslider")
+    iterslider.sliderReleased.connect(updateIterationsValue)
+    iterslider.valueChanged.connect(updateNumericalValues)
+
+    distInfluenceSlider = mainWindow.findChild(QtWidgets.QSlider, "distinfluenceslider")
+    distInfluenceSlider.sliderReleased.connect(updateDistInfluenceValue)
+    distInfluenceSlider.valueChanged.connect(updateNumericalValues)
+
+    bodyOffsetSlider = mainWindow.findChild(QtWidgets.QSlider, "bodyoffsetslider")
+    bodyOffsetSlider.sliderReleased.connect(updateBodyOffsetValue)
+    bodyOffsetSlider.valueChanged.connect(updateNumericalValues)
+
+    shrinksmoothdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothdistslider")
+    shrinksmoothdistslider.sliderReleased.connect(updateShrinkSmthDistValue)
+    shrinksmoothdistslider.valueChanged.connect(updateNumericalValues)
+
+    shrinkmaxpntsslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxpntsslider")
+    shrinkmaxpntsslider.sliderReleased.connect(updateShrinkMaxPntsValue)
+    shrinkmaxpntsslider.valueChanged.connect(updateNumericalValues)
+
+    shrinkmaxdistslider = mainWindow.findChild(QtWidgets.QSlider, "shrinkmaxdistslider")
+    shrinkmaxdistslider.sliderReleased.connect(updateShrinkMaxDist)
+    shrinkmaxdistslider.valueChanged.connect(updateNumericalValues)
+
+    shrinkPeakDist = mainWindow.findChild(QtWidgets.QSlider, "shrinkpeakdistslider")
+    shrinkPeakDist.sliderReleased.connect(updateShrinkPeakDist)
+    shrinkPeakDist.valueChanged.connect(updateNumericalValues)
+
+    setshrinkpostoggle = mainWindow.findChild(QtWidgets.QCheckBox, "setshrinkpostoggle")
+    setshrinkpostoggle.clicked.connect(updateShrinkPosToggle)
+
+    shrinksmoothneighpntstoggle = mainWindow.findChild(QtWidgets.QCheckBox, "shrinksmoothneighpntstoggle")
+    shrinksmoothneighpntstoggle.clicked.connect(updateShrinkNeighPntsToggle)
+
+    shrinksmoothitersslider = mainWindow.findChild(QtWidgets.QSlider, "shrinksmoothitersslider")
+    shrinksmoothitersslider.sliderReleased.connect(updateShrinkSmoothIterations)
+    shrinksmoothitersslider.valueChanged.connect(updateNumericalValues)
+
+    uv4checkbox = mainWindow.findChild(QtWidgets.QCheckBox, "uv4checkbox")
+    uv4checkbox.clicked.connect(updateUVFourToggle)
 
     #Initialize the system
     createClothNode()
     createWizardNode()
     getSceneInfo()
+    initAdvancedSliders()
     
     return mainWindow
-########################################################################
-]]></script>
+########################################################################]]></script>
     <includeInPaneTabMenu menu_position="0" create_separator="false"/>
     <includeInToolbarMenu menu_position="101" create_separator="false"/>
     <help><![CDATA[]]></help>

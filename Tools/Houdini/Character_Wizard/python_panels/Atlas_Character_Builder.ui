@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>690</width>
-    <height>1167</height>
+    <width>692</width>
+    <height>1220</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,9 +24,14 @@
 	font: 12pt &quot;Segoe UI&quot;;
 }
 
-Line
+HLine
 {
-	color: rgb(229, 229, 229);
+	color: rgb(58, 58, 58);
+}
+
+vLine
+{
+	color: rgb(58, 58, 58);
 }
 
 QPushButton
@@ -114,7 +119,7 @@ font: 63 28pt &quot;Segoe UI&quot;;
 color: rgb(238, 238, 238);</string>
           </property>
           <property name="text">
-           <string>Atlas Clothing Wizard v0.18</string>
+           <string>Atlas Clothing Wizard v0.2</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -127,7 +132,7 @@ color: rgb(238, 238, 238);</string>
        </layout>
       </item>
       <item>
-       <widget class="QTabWidget" name="clothing_tab">
+       <widget class="QTabWidget" name="tabmenu">
         <property name="currentIndex">
          <number>0</number>
         </property>
@@ -173,12 +178,12 @@ color: rgb(238, 238, 238);</string>
                <widget class="QPushButton" name="load_btn">
                 <property name="minimumSize">
                  <size>
-                  <width>120</width>
+                  <width>180</width>
                   <height>0</height>
                  </size>
                 </property>
                 <property name="text">
-                 <string>Choose Clothing</string>
+                 <string>Load Clothing Geo</string>
                 </property>
                </widget>
               </item>
@@ -601,47 +606,57 @@ font: 12pt &quot;Segoe UI&quot;;</string>
                <widget class="QComboBox" name="layer_box">
                 <item>
                  <property name="text">
-                  <string>Boot/Glove Small</string>
+                  <string>0 - Boots / Gloves xSmall</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Torso Extra Small</string>
+                  <string>0.1 - Torso xSmall</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Pants Small</string>
+                  <string>1 - Pants Small</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Torso Small</string>
+                  <string>2 - Torso Small</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Gloves Small</string>
+                  <string>3 - Gloves Small</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Pants Big</string>
+                  <string>4 - Pants Big</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Boots Big</string>
+                  <string>5 - Torso Big</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Torso Big</string>
+                  <string>5.1 - Pants XL</string>
                  </property>
                 </item>
                 <item>
                  <property name="text">
-                  <string>Gloves Big</string>
+                  <string>6 - Boots Big</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>7 - Gloves Big</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>8 - Hats</string>
                  </property>
                 </item>
                </widget>
@@ -746,7 +761,7 @@ font: 12pt &quot;Segoe UI&quot;;</string>
             <item>
              <widget class="QLabel" name="label_4">
               <property name="text">
-               <string>Export FBX</string>
+               <string>Export Mesh</string>
               </property>
              </widget>
             </item>
@@ -823,6 +838,19 @@ font: 12pt &quot;Segoe UI&quot;;</string>
              </widget>
             </item>
             <item>
+             <widget class="QPushButton" name="bgeo_export_btn">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Export Clothing</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="verticalSpacer">
               <property name="orientation">
                <enum>Qt::Vertical</enum>
@@ -836,6 +864,1149 @@ font: 12pt &quot;Segoe UI&quot;;</string>
              </spacer>
             </item>
            </layout>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="advanced_tab">
+         <property name="maximumSize">
+          <size>
+           <width>664</width>
+           <height>1027</height>
+          </size>
+         </property>
+         <attribute name="title">
+          <string>Advanced</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_7">
+          <item>
+           <layout class="QHBoxLayout" name="shrinkshapelayout_2">
+            <item>
+             <widget class="QLineEdit" name="shrinkshapelineedit">
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>  No Shrink Shape Loaded...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="loadShrinkBtn">
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Load Shrink Geo</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="projectionlayout_2">
+            <item>
+             <widget class="QLineEdit" name="projectionShapePath">
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>  No Projection Geo Loaded...</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="projectionShapeBtn">
+              <property name="minimumSize">
+               <size>
+                <width>180</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Load Projection Geo</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="AdvancedLayout">
+            <item>
+             <layout class="QHBoxLayout" name="PreviewLabelLayout">
+              <item>
+               <widget class="QLabel" name="previewlabel">
+                <property name="styleSheet">
+                 <string notr="true">font: 16pt &quot;Segoe UI&quot;;</string>
+                </property>
+                <property name="text">
+                 <string>Preview</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="preview_toggle">
+                <property name="layoutDirection">
+                 <enum>Qt::LeftToRight</enum>
+                </property>
+                <property name="autoFillBackground">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="BlendShrinkLayout">
+              <item>
+               <widget class="QLabel" name="blendshrinklabel">
+                <property name="minimumSize">
+                 <size>
+                  <width>160</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Blend Shrink</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="blendshrinkvalue">
+                <property name="maximumSize">
+                 <size>
+                  <width>60</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: rgb(236, 236, 236);</string>
+                </property>
+                <property name="text">
+                 <string>0.0</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSlider" name="blendshrinkslider">
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="singleStep">
+                 <number>0</number>
+                </property>
+                <property name="pageStep">
+                 <number>1</number>
+                </property>
+                <property name="value">
+                 <number>100</number>
+                </property>
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="BlendHighFatLayout">
+            <item>
+             <widget class="QLabel" name="label_6">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Blend HighFat</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="HFValue">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="highfatslider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="DeltaPStrengthLayout">
+            <item>
+             <widget class="QLabel" name="DeltaPLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>DeltaP Strength</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="DPValue">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="deltapstrengthslider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>6</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_3">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(58, 58, 58);</string>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Plain</enum>
+            </property>
+            <property name="lineWidth">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="UVTransfeLayout">
+            <item>
+             <widget class="QLabel" name="UVTransferTitle">
+              <property name="styleSheet">
+               <string notr="true">font: 16pt &quot;Segoe UI&quot;;</string>
+              </property>
+              <property name="text">
+               <string>UV Transfer</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="UVSmoothIterLayout">
+            <item>
+             <widget class="QLabel" name="UVSmoothLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>UV Smooth Iterations</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="uvsmoothval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="uvSmoothIterationsSlider">
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="value">
+               <number>1</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="MaxDistanceLayout">
+            <item>
+             <widget class="QLabel" name="MaxDistanceLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Max Distance</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="maxDistVal">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="MaxDistSlider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_6">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(58, 58, 58);</string>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Plain</enum>
+            </property>
+            <property name="lineWidth">
+             <number>1</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="BodyDistanceTitleLayout">
+            <item>
+             <widget class="QLabel" name="label_7">
+              <property name="styleSheet">
+               <string notr="true">font: 16pt &quot;Segoe UI&quot;;</string>
+              </property>
+              <property name="text">
+               <string>Body Distance</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="SmoothDistLayout">
+            <item>
+             <widget class="QLabel" name="label_8">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Smooth Distance</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="smoothdistval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="smoothdistslider">
+              <property name="maximum">
+               <number>400</number>
+              </property>
+              <property name="value">
+               <number>200</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="MaxPointsLayout">
+            <item>
+             <widget class="QLabel" name="label_9">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Max Points</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="maxpntsval">
+              <property name="maximumSize">
+               <size>
+                <width>61</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="maxpntsslider">
+              <property name="maximum">
+               <number>2000</number>
+              </property>
+              <property name="value">
+               <number>1000</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="IterationsLayout">
+            <item>
+             <widget class="QLabel" name="IterationsLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Iterations</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="iterationsval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="iteratrionsslider">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>24</number>
+              </property>
+              <property name="value">
+               <number>12</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="DistanceInfluenceLayout">
+            <item>
+             <widget class="QLabel" name="label_10">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Distance Influence</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="distinfluenceval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="distinfluenceslider">
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="BodyOffsetLayout">
+            <item>
+             <widget class="QLabel" name="BodyOffsetLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Body Offset</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="bodyoffsetval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="bodyoffsetslider">
+              <property name="minimum">
+               <number>-5</number>
+              </property>
+              <property name="maximum">
+               <number>5</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_7">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(58, 58, 58);</string>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Plain</enum>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ShrinkTitleLayout">
+            <item>
+             <widget class="QLabel" name="label_11">
+              <property name="styleSheet">
+               <string notr="true">font: 16pt &quot;Segoe UI&quot;;</string>
+              </property>
+              <property name="text">
+               <string>Shrink</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ShrinkSmoothDistanceLayout">
+            <item>
+             <widget class="QLabel" name="ShrinkSmoothDistLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Smooth Distance</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="shrinksmoothdistval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shrinksmoothdistslider">
+              <property name="maximum">
+               <number>70</number>
+              </property>
+              <property name="value">
+               <number>35</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ShrinkMaskPointLayout">
+            <item>
+             <widget class="QLabel" name="ShrinkMaxPointsLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Max Points</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="shrinkmaxpntsval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shrinkmaxpntsslider">
+              <property name="maximum">
+               <number>400</number>
+              </property>
+              <property name="value">
+               <number>200</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ShrinkMaxDistLayout">
+            <item>
+             <widget class="QLabel" name="ShrinkMaxDistLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Max Distance</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="shrinkmaxdistval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shrinkmaxdistslider">
+              <property name="maximum">
+               <number>60</number>
+              </property>
+              <property name="value">
+               <number>30</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="PeakDistLayout">
+            <item>
+             <widget class="QLabel" name="PeakDistLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Peak Distance</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="shrinkpeakdistval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shrinkpeakdistslider">
+              <property name="minimum">
+               <number>-10</number>
+              </property>
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ShrinkPosSetLayout">
+            <item>
+             <widget class="QLabel" name="SetShrinkPosLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Set Shrink Position</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="setshrinkpostoggle">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_13">
+              <property name="minimumSize">
+               <size>
+                <width>20</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_12">
+              <property name="minimumSize">
+               <size>
+                <width>210</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Smooth Neighbour Points</string>
+              </property>
+              <property name="margin">
+               <number>5</number>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="shrinksmoothneighpntstoggle">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="iconSize">
+               <size>
+                <width>40</width>
+                <height>40</height>
+               </size>
+              </property>
+              <property name="checked">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="SmoothIterationsLayout">
+            <item>
+             <widget class="QLabel" name="SmoothITersLabel">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Smooth Iterations</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="shrinksmoothitersval">
+              <property name="maximumSize">
+               <size>
+                <width>60</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">color: rgb(236, 236, 236);</string>
+              </property>
+              <property name="text">
+               <string>0.0</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shrinksmoothitersslider">
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="value">
+               <number>5</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="Line" name="line_8">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">color: rgb(58, 58, 58);</string>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Plain</enum>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="ProjectionTitleLayout">
+            <item>
+             <widget class="QLabel" name="label_14">
+              <property name="styleSheet">
+               <string notr="true">font: 16pt &quot;Segoe UI&quot;;</string>
+              </property>
+              <property name="text">
+               <string>Projection</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="WriteUV4Layout">
+            <item>
+             <widget class="QLabel" name="label_15">
+              <property name="minimumSize">
+               <size>
+                <width>160</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Write UV4</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="uv4checkbox">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -959,8 +2130,6 @@ p, li { white-space: pre-wrap; }
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
- <resources>
-  <include location="//galleon/User/kennyl/Desktop/Work_Folder/Character_Tools/QT_UI/icons.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>
